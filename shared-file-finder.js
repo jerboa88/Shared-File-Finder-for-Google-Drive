@@ -1,6 +1,14 @@
 /*
  * Shared File Finder for Google Drive | @jerboa88 | MIT | (https://github.com/jerboa88/Shared-File-Finder-for-Google-Drive).
  */
+
+
+const folderCache = {};
+
+
+/*
+ * Entry point
+ */
 function runSharedFileFinder() {
 	const headerLabels = ['ID', 'Type', 'Path', 'Owners', 'Link'];
 	const query = 'trashed = false and "me" in owners';
@@ -11,6 +19,7 @@ function runSharedFileFinder() {
 	let pageToken = null;
 
 	sheet.clear();
+	sheet.setFrozenRows(1);
 	headerRow.setValues([headerLabels]);
 	headerRow.setFontWeight('bold');
 
@@ -48,7 +57,9 @@ function runSharedFileFinder() {
 		}
 	} while (pageToken);
 
+	sheet.setColumnWidth(1, 50);
 	sheet.autoResizeColumns(2, numOfCols);
+	sheet.sort(3, true);
 }
 
 
@@ -60,7 +71,14 @@ function getFilePath(file) {
 	let parentId = getParentId(file);
 
 	while (parentId) {
-		const parentFolder = Drive.Files.get(parentId);
+		let parentFolder;
+
+		if (parentId in folderCache) {
+			parentFolder = folderCache[parentId];
+		} else {
+			parentFolder = Drive.Files.get(parentId);
+			folderCache[parentId] = parentFolder;
+		}
 
 		parentId = getParentId(parentFolder);
 
