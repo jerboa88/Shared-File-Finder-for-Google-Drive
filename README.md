@@ -1,7 +1,5 @@
 <!-- Project Header -->
 <div align="center">
-  <!-- <img class="projectLogo" src="https://via.placeholder.com/256.jpg" alt="Project logo" title="Project logo" width="256"> -->
-
   <h1 class="projectName">Shared File Finder for Google Drive</h1>
 
   <p class="projectBadges">
@@ -24,8 +22,8 @@
 ## Usage
  1. Create a new Google Sheet.
  2. Open the Script Editor (Extensions > Apps Script).
- 3. Copy and paste the code from this file into the Script Editor.
- 4. Save the project and run the `runSharedFileFinder` function.
+ 3. Copy and paste the code from [shared-file-finder.js](shared-file-finder.js) into the Script Editor.
+ 4. Save the project and run the `runSharedFileFinder()` function.
 
 **Notes:**
   - Files must be owned by the current Google Drive user.
