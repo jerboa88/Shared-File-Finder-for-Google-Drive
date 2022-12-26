@@ -33,7 +33,7 @@ function runSharedFileFinder() {
 	const resultsSheetName = 'Shared Files';
 	const folderBgColor = '#FFF8E1';
 	const fileBgColor = '#E0F7FA';
-	const headerLabels = ['ID', 'Type', 'Path', 'Users'];
+	const headerLabels = ['ID', '', 'Path', 'Users'];
 	const query = 'trashed = false and "me" in owners';
 	const chunkSize = 1000;
 	const isDebugMode = false;
@@ -198,8 +198,6 @@ function createResultsSheet(sheetName, headerLabels, fileSummaryList, cellIconCa
 	resizeSheet(resultsSheet, numOfRows, numOfCols);
 
 	resultsSheet.setFrozenRows(1);
-	resultsSheet.setColumnWidth(1, 50);
-	resultsSheet.setColumnWidth(2, 50);
 
 	const headerRowRange = resultsSheet.getRange(1, 1, 1, numOfCols);
 	const dataRange = resultsSheet.getRange(2, 1, numOfRows, numOfCols);
@@ -207,6 +205,7 @@ function createResultsSheet(sheetName, headerLabels, fileSummaryList, cellIconCa
 
 	headerRowRange.setValues([headerLabels]);
 	headerRowRange.setFontWeight('bold');
+	dataRange.setVerticalAlignment('middle');
 	fileTypeDataRange.setHorizontalAlignment('center');
 	activeSpreadsheet.setActiveSheet(resultsSheet);
 
@@ -215,14 +214,17 @@ function createResultsSheet(sheetName, headerLabels, fileSummaryList, cellIconCa
 
 	setRichTextValues(dataRange, sortedFileSummaryList);
 
+	// Set column widths
+	resultsSheet.setColumnWidth(1, 50);
+	resultsSheet.setColumnWidth(2, 20);
+	resultsSheet.autoResizeColumns(3, numOfCols - 2);
+
 	// Set the background color of the folder rows
 	sortedFileSummaryList.forEach(({ isFolder }, i) => {
 		dataRange.offset(i, 0, 1).setBackground(isFolder ? folderBgColor : fileBgColor);
 	});
 
 	setCellIconValues(fileTypeDataRange, sortedFileSummaryList, cellIconCache);
-
-	resultsSheet.autoResizeColumns(2, numOfCols - 1);
 
 	console.log('Done generating results sheet');
 }
