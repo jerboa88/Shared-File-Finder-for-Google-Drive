@@ -46,6 +46,8 @@ function runSharedFileFinder() {
 	let pageToken = null;
 	let numOfFilesProcessed = 0;
 
+	console.log('Processing files...');
+
 	do {
 		try {
 			files = Drive.Files.list({
@@ -91,15 +93,9 @@ function runSharedFileFinder() {
 		}
 	} while (isDebugMode ? false : pageToken);
 
-	const numOfRows = fileSummaryList.length;
-	const numOfCols = headerLabels.length;
-	const activeSpreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-	const resultsSheet = createResultsSheet(activeSpreadsheet, resultsSheetName, numOfRows, numOfCols, headerLabels);
-	const dataRange = resultsSheet.getRange(2, 1, numOfRows, numOfCols);
-	const fileTypeDataRange = dataRange.offset(0, 1, fileSummaryList.length, 1);
+	console.log(`Done processing files`);
 
-	populateResultsSheet(dataRange, fileTypeDataRange, cellIconCache, fileSummaryList, folderBgColor, fileBgColor);
-	formatResultsSheet(activeSpreadsheet, resultsSheet, fileTypeDataRange, numOfCols);
+	createResultsSheet(resultsSheetName, headerLabels, fileSummaryList, cellIconCache, folderBgColor, fileBgColor);
 }
 
 
@@ -159,9 +155,14 @@ function createCellImage(imageUrl) {
 /*
  * Creates a new sheet to display the progress of the script.
  */
-function createResultsSheet(activeSpreadsheet, sheetName, numOfRows, numOfCols, headerLabels) {
+function createResultsSheet(sheetName, headerLabels, fileSummaryList, cellIconCache, folderBgColor, fileBgColor) {
+	console.log('Generating results sheet...');
+
 	sheetName = `${sheetName} (${getDateString()})`;
 
+	const activeSpreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+	const numOfRows = fileSummaryList.length;
+	const numOfCols = headerLabels.length;
 	let resultsSheet = activeSpreadsheet.getSheetByName(sheetName);
 
 	if (resultsSheet != null) {
@@ -174,13 +175,56 @@ function createResultsSheet(activeSpreadsheet, sheetName, numOfRows, numOfCols, 
 
 	resultsSheet.setFrozenRows(1);
 	resultsSheet.setColumnWidth(1, 50);
+	resultsSheet.setColumnWidth(2, 50);
 
 	const headerRowRange = resultsSheet.getRange(1, 1, 1, numOfCols);
+	const dataRange = resultsSheet.getRange(2, 1, numOfRows, numOfCols);
+	const fileTypeDataRange = dataRange.offset(0, 1, numOfRows, 1);
 
 	headerRowRange.setValues([headerLabels]);
 	headerRowRange.setFontWeight('bold');
+	fileTypeDataRange.setHorizontalAlignment('center');
+	activeSpreadsheet.setActiveSheet(resultsSheet);
 
-	return resultsSheet;
+	// Transform the data and add it to the sheet
+	const sortedFileSummaryList = fileSummaryList.sort(({ path: path1 }, { path: path2 }) => path1.localeCompare(path2));
+
+	setRichTextValues(dataRange, sortedFileSummaryList);
+
+	// Set the background color of the folder rows
+	sortedFileSummaryList.forEach(({ isFolder }, i) => {
+		dataRange.offset(i, 0, 1).setBackground(isFolder ? folderBgColor : fileBgColor);
+	});
+
+	setCellIconValues(fileTypeDataRange, sortedFileSummaryList, cellIconCache);
+
+	resultsSheet.autoResizeColumns(2, numOfCols - 1);
+
+	console.log('Done generating results sheet');
+}
+
+
+function setRichTextValues(dataRange, sortedFileSummaryList) {
+	const blankRichTextValue = createRichTextValue('');
+	const richTextValues = sortedFileSummaryList.map(fileSummary => [
+		createRichTextValue(fileSummary.id),
+		blankRichTextValue,
+		createRichTextValue(fileSummary.path, fileSummary.link),
+		createRichTextValue(fileSummary.ownerEmailAddresses)
+	]);
+
+	dataRange.setRichTextValues(richTextValues);
+}
+
+
+function setCellIconValues(fileTypeDataRange, sortedFileSummaryList, cellIconCache) {
+	const cellIconValues = sortedFileSummaryList.map(({ iconLink }) => {
+		return cellIconCache.get(iconLink, () => [createCellImage(iconLink)]);
+	});
+
+	console.log('Loading file type icons. This may take a minute to complete...');
+
+	fileTypeDataRange.setValues(cellIconValues);
 }
 
 
@@ -199,45 +243,6 @@ function resizeSheet(sheet, numOfRows, numOfCols) {
 	} else if (sheet.getMaxColumns() > numOfCols) {
 		sheet.deleteColumns(numOfCols + 1, sheet.getMaxColumns() - numOfCols);
 	}
-}
-
-
-/*
- * Map the file summary list to the results sheet.
- */
-function populateResultsSheet(dataRange, fileTypeDataRange, cellIconCache, fileSummaryList, folderBgColor, fileBgColor) {
-	const sortedFileSummaryList = fileSummaryList.sort(({ path: path1 }, { path: path2 }) => path1.localeCompare(path2));
-	const blankRichTextValue = createRichTextValue('');
-
-	dataRange.setRichTextValues(
-		sortedFileSummaryList.map(fileSummary => [
-			createRichTextValue(fileSummary.id),
-			blankRichTextValue,
-			createRichTextValue(fileSummary.path, fileSummary.link),
-			createRichTextValue(fileSummary.ownerEmailAddresses)
-		]));
-
-	sortedFileSummaryList.forEach((fileSummary, i) => {
-		dataRange.offset(i, 0, 1).setBackground(fileSummary.isFolder ? folderBgColor : fileBgColor);
-	});
-
-	const iconLinks = sortedFileSummaryList.map(({ iconLink }) => {
-		return cellIconCache.get(iconLink, () => [createCellImage(iconLink)]);
-	});
-
-	console.log('Loading file type icons. This may take a minute to complete');
-
-	fileTypeDataRange.setValues(iconLinks);
-}
-
-
-/*
- * Format the results sheet after data has been added.
- */
-function formatResultsSheet(activeSpreadsheet, resultsSheet, fileTypeDataRange, numOfCols) {
-	resultsSheet.autoResizeColumns(2, numOfCols - 1);
-	fileTypeDataRange.setHorizontalAlignment('center');
-	activeSpreadsheet.setActiveSheet(resultsSheet);
 }
 
 
