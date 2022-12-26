@@ -39,13 +39,16 @@ function runSharedFileFinder() {
 	const isDebugMode = false;
 
 	// Runtime
+	const totalNumOfBytesUsed = parseInt(Drive.About.get().quotaBytesUsed);
 	const folderCache = new Cache();
 	const cellIconCache = new Cache();
 	const fileSummaryList = [];
 	let files;
 	let pageToken = null;
 	let numOfFilesProcessed = 0;
+	let numOfBytesProcessed = 0;
 
+	console.log(`${totalNumOfBytesUsed} bytes of storage used`);
 	console.log('Processing files...');
 
 	do {
@@ -79,11 +82,13 @@ function runSharedFileFinder() {
 
 					console.log(`${isFolder ? 'Folder' : 'File'} '${file.title}' is shared. Adding to list`);
 				}
+
+				numOfBytesProcessed += parseInt(file.quotaBytesUsed);
 			}
 
 			numOfFilesProcessed += files.items.length;
 
-			console.log(`${numOfFilesProcessed} files processed`);
+			console.log(`${numOfFilesProcessed} files processed (~${(numOfBytesProcessed * 100 / totalNumOfBytesUsed).toFixed(2)}%)`);
 
 			pageToken = files.nextPageToken;
 		} catch (err) {
