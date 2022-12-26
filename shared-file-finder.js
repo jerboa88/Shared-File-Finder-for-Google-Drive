@@ -33,7 +33,7 @@ function runSharedFileFinder() {
 	const resultsSheetName = 'Shared Files';
 	const folderBgColor = '#FFF8E1';
 	const fileBgColor = '#E0F7FA';
-	const headerLabels = ['ID', 'Type', 'Path', 'Owners'];
+	const headerLabels = ['ID', 'Type', 'Path', 'Users'];
 	const query = 'trashed = false and "me" in owners';
 	const chunkSize = 1000;
 	const isDebugMode = false;
@@ -67,15 +67,13 @@ function runSharedFileFinder() {
 
 				if (file.shared) {
 					const isFolder = file.mimeType === 'application/vnd.google-apps.folder';
-					const ownerEmailAddresses = file.owners.map(owner => owner.emailAddress);
-					const filePath = getFilePath(folderCache, file);
 
 					fileSummaryList.push({
 						id: file.id,
 						isFolder: isFolder,
 						iconLink: file.iconLink,
-						path: filePath,
-						ownerEmailAddresses: ownerEmailAddresses.toString(),
+						path: getFilePath(folderCache, file),
+						users: getUserList(file.id),
 						link: file.alternateLink,
 					});
 
@@ -96,6 +94,32 @@ function runSharedFileFinder() {
 	console.log(`Done processing files`);
 
 	createResultsSheet(resultsSheetName, headerLabels, fileSummaryList, cellIconCache, folderBgColor, fileBgColor);
+}
+
+
+/*
+ * Returns a list of users with access to a file.
+ */
+function getUserList(fileId) {
+	let permissionsList = Drive.Permissions.list(fileId);
+
+	if (!permissionsList.items || permissionsList.items.length === 0) {
+		console.warn(`No permissions found for file ${fileId}`);
+
+		return;
+	}
+
+	let userList = [];
+
+	for (let i = 0; i < permissionsList.items.length; ++i) {
+		const { emailAddress, role } = permissionsList.items[i];
+
+		if (role !== 'owner') {
+			userList.push(`${emailAddress} (${role})`);
+		}
+	}
+
+	return userList;
 }
 
 
@@ -210,7 +234,7 @@ function setRichTextValues(dataRange, sortedFileSummaryList) {
 		createRichTextValue(fileSummary.id),
 		blankRichTextValue,
 		createRichTextValue(fileSummary.path, fileSummary.link),
-		createRichTextValue(fileSummary.ownerEmailAddresses)
+		createRichTextValue(fileSummary.users.join('\n'))
 	]);
 
 	dataRange.setRichTextValues(richTextValues);
