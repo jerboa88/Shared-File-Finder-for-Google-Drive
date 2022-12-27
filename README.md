@@ -1,5 +1,7 @@
 <!-- Project Header -->
 <div align="center">
+  <img class="projectLogo" src="screenshot.png" alt="Project logo" title="Project logo" width="256">
+
   <h1 class="projectName">Shared File Finder for Google Drive</h1>
 
   <p class="projectBadges">
