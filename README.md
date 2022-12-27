@@ -27,12 +27,12 @@
 
 **Notes:**
   - Files must be owned by the current Google Drive user.
-  - If a folder is shared, both the folder and its files may be shown in the list.
+  - If a folder is shared, both the folder and its files will be shown in the list.
   - There may be bugs. Use at your own risk.
 
 
 ## Contributing
-Contributions, issues, and forks are welcome but this is a hobby project so don't expect too much from it. [SemVer](http://semver.org/) is used for versioning.
+Contributions, issues, and forks are welcome. [SemVer](http://semver.org/) is used for versioning.
 
 
 ## License
