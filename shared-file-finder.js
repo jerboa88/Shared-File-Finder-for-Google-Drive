@@ -31,8 +31,13 @@ class Cache {
 function runSharedFileFinder() {
 	// Constants
 	const resultsSheetName = 'Shared Files';
-	const folderBgColor = '#FFF8E1';
-	const fileBgColor = '#E0F7FA';
+	const colorMap = {
+		folderBg: '#FFF8E1',
+		fileBg: '#E0F7FA',
+		readerFont: '#000000',
+		writerFont: '#B71C1C',
+		commenterFont: '#1B5E20',
+	};
 	const headerLabels = ['ID', '', 'Path', 'Users'];
 	const query = 'trashed = false and "me" in owners';
 	const chunkSize = 1000;
@@ -98,7 +103,7 @@ function runSharedFileFinder() {
 
 	console.log(`Done processing files`);
 
-	createResultsSheet(resultsSheetName, headerLabels, fileSummaryList, cellIconCache, folderBgColor, fileBgColor);
+	createResultsSheet(resultsSheetName, headerLabels, fileSummaryList, cellIconCache, colorMap);
 }
 
 
@@ -119,8 +124,11 @@ function getUserList(fileId) {
 	for (let i = 0; i < permissionsList.items.length; ++i) {
 		const { emailAddress, role } = permissionsList.items[i];
 
-		if (role !== 'owner') {
-			userList.push(`${emailAddress} (${role})`);
+		if (role === 'reader' || role === 'writer' || role === 'commenter') {
+			userList.push({
+				emailAddress: emailAddress,
+				role: role
+			});
 		}
 	}
 
@@ -170,6 +178,35 @@ function createRichTextValue(text, linkUrl = null) {
 
 
 /*
+ * Returns a RichTextValue object built from a list of users and their roles.
+ */
+function createRichTextValueFromUserList(userList, textStyleMap) {
+	let userListString = '';
+
+	const userTextStylesList = userList.map(({ emailAddress, role }) => {
+		const startIndex = userListString.length;
+
+		userListString += `${emailAddress} (${role})\n`;
+
+		return {
+			startIndex: startIndex,
+			endIndex: userListString.length,
+			textStyle: textStyleMap[role]
+		};
+	});
+
+	// Remove trailing newline and replace with a space to prevent text style indices from being out of bounds
+	const rtv = SpreadsheetApp.newRichTextValue().setText(userListString.slice(0, -1) + ' ');
+
+	userTextStylesList.forEach(({ startIndex, endIndex, textStyle }) => {
+		rtv.setTextStyle(startIndex, endIndex, textStyle);
+	});
+
+	return rtv.build();
+}
+
+
+/*
  * Returns a CellImage object with the given image URL.
  */
 function createCellImage(imageUrl) {
@@ -184,7 +221,7 @@ function createCellImage(imageUrl) {
 /*
  * Creates a new sheet to display the progress of the script.
  */
-function createResultsSheet(sheetName, headerLabels, fileSummaryList, cellIconCache, folderBgColor, fileBgColor) {
+function createResultsSheet(sheetName, headerLabels, fileSummaryList, cellIconCache, colorMap) {
 	console.log('Generating results sheet...');
 
 	sheetName = `${sheetName} (${getDateString()})`;
@@ -217,7 +254,7 @@ function createResultsSheet(sheetName, headerLabels, fileSummaryList, cellIconCa
 	// Transform the data and add it to the sheet
 	const sortedFileSummaryList = fileSummaryList.sort(({ path: path1 }, { path: path2 }) => path1.localeCompare(path2));
 
-	setRichTextValues(dataRange, sortedFileSummaryList);
+	setRichTextValues(dataRange, sortedFileSummaryList, colorMap);
 
 	// Set column widths
 	resultsSheet.setColumnWidth(1, 50);
@@ -226,7 +263,7 @@ function createResultsSheet(sheetName, headerLabels, fileSummaryList, cellIconCa
 
 	// Set the background color of the folder rows
 	sortedFileSummaryList.forEach(({ isFolder }, i) => {
-		dataRange.offset(i, 0, 1).setBackground(isFolder ? folderBgColor : fileBgColor);
+		dataRange.offset(i, 0, 1).setBackground(isFolder ? colorMap.folderBg : colorMap.fileBg);
 	});
 
 	setCellIconValues(fileTypeDataRange, sortedFileSummaryList, cellIconCache);
@@ -235,19 +272,30 @@ function createResultsSheet(sheetName, headerLabels, fileSummaryList, cellIconCa
 }
 
 
-function setRichTextValues(dataRange, sortedFileSummaryList) {
+/*
+ * Map data to rich text values and assign them to the given range.
+ */
+function setRichTextValues(dataRange, sortedFileSummaryList, colorMap) {
+	const textStyleMap = {
+		reader: SpreadsheetApp.newTextStyle().setForegroundColor(colorMap.readerFont).build(),
+		writer: SpreadsheetApp.newTextStyle().setForegroundColor(colorMap.writerFont).build(),
+		commenter: SpreadsheetApp.newTextStyle().setForegroundColor(colorMap.commenterFont).build()
+	};
 	const blankRichTextValue = createRichTextValue('');
 	const richTextValues = sortedFileSummaryList.map(fileSummary => [
 		createRichTextValue(fileSummary.id),
 		blankRichTextValue,
 		createRichTextValue(fileSummary.path, fileSummary.link),
-		createRichTextValue(fileSummary.users.join('\n'))
+		createRichTextValueFromUserList(fileSummary.users, textStyleMap)
 	]);
 
 	dataRange.setRichTextValues(richTextValues);
 }
 
 
+/*
+ * Map icon links to cell icons and assign them to the given range.
+ */
 function setCellIconValues(fileTypeDataRange, sortedFileSummaryList, cellIconCache) {
 	const cellIconValues = sortedFileSummaryList.map(({ iconLink }) => {
 		return cellIconCache.get(iconLink, () => [createCellImage(iconLink)]);
