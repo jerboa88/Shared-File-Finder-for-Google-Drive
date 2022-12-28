@@ -25,7 +25,8 @@
  1. Create a new Google Sheet.
  2. Open the Script Editor (Extensions > Apps Script).
  3. Copy and paste the code from [shared-file-finder.js](shared-file-finder.js) into the Script Editor.
- 4. Save the project and run the `runSharedFileFinder()` function.
+ 4. Enable `Advanced Services` for the project (see [here](https://developers.google.com/apps-script/guides/services/advanced#enable_advanced_services))
+ 5. Save the project and run the `runSharedFileFinder()` function.
 
 **Notes:**
   - Files must be owned by the current Google Drive user.
