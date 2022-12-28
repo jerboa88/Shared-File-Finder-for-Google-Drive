@@ -61,11 +61,13 @@ function runSharedFileFinder() {
 			files = Drive.Files.list({
 				q: query,
 				maxResults: chunkSize,
-				pageToken: pageToken,
+				spaces: 'drive',
+				fields: 'items(id, mimeType, iconLink, alternateLink, title, shared, parents(isRoot, id), quotaBytesUsed), nextPageToken',
+				pageToken: pageToken
 			});
 
 			if (!files.items || files.items.length === 0) {
-				console.warn('No folders found.');
+				console.warn('No files or folders found.');
 
 				return;
 			}
@@ -111,7 +113,9 @@ function runSharedFileFinder() {
  * Returns a list of users with access to a file.
  */
 function getUserList(fileId) {
-	let permissionsList = Drive.Permissions.list(fileId);
+	let permissionsList = Drive.Permissions.list(fileId, {
+		fields: 'items(emailAddress, role)'
+	});
 
 	if (!permissionsList.items || permissionsList.items.length === 0) {
 		console.warn(`No permissions found for file ${fileId}`);
@@ -144,7 +148,9 @@ function getFilePath(folderCache, file) {
 	let parentId = getParentId(file);
 
 	while (parentId) {
-		const parentFolder = folderCache.get(parentId, () => Drive.Files.get(parentId));
+		const parentFolder = folderCache.get(parentId, () => Drive.Files.get(parentId, {
+			fields: 'parents(isRoot, id), title'
+		}));
 
 		parentId = getParentId(parentFolder);
 
