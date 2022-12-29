@@ -146,28 +146,6 @@ function getUserList(fileId) {
 
 
 /*
- * Returns the full path of a file as a string (recursive).
- */
-// function getFilePath(folderPathCache, file) {
-// 	let parentId = getParentId(file);
-
-// 	if (!parentId) {
-// 		return file.title;
-// 	}
-
-// 	const parentPath = folderPathCache.get(parentId, () => {
-// 		const parentFolder = Drive.Files.get(parentId, {
-// 			fields: 'parents(isRoot, id), title'
-// 		});
-
-// 		return getFilePath(folderPathCache, parentFolder);
-// 	});
-
-// 	return `${parentPath}/${file.title}`;
-// }
-
-
-/*
  * Returns the full path of a file as a string.
  */
 function getFilePath(folderCache, folderPathCache, file) {
