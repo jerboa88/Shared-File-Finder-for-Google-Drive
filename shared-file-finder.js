@@ -11,7 +11,7 @@ class Cache {
 		this.cache = {};
 	}
 
-	get(key, callback) {
+	get(key, callback = () => { }) {
 		if (key in this.cache) {
 			return this.cache[key];
 		}
@@ -21,6 +21,10 @@ class Cache {
 		this.cache[key] = value;
 
 		return value;
+	}
+
+	set(key, value) {
+		this.cache[key] = value;
 	}
 }
 
@@ -46,6 +50,7 @@ function runSharedFileFinder() {
 	// Runtime
 	const totalNumOfBytesUsed = parseInt(Drive.About.get().quotaBytesUsed);
 	const folderCache = new Cache();
+	const folderPathCache = new Cache();
 	const cellIconCache = new Cache();
 	const fileSummaryList = [];
 	let files;
@@ -61,11 +66,13 @@ function runSharedFileFinder() {
 			files = Drive.Files.list({
 				q: query,
 				maxResults: chunkSize,
-				pageToken: pageToken,
+				spaces: 'drive',
+				fields: 'items(id, mimeType, iconLink, alternateLink, title, shared, parents(isRoot, id), quotaBytesUsed), nextPageToken',
+				pageToken: pageToken
 			});
 
 			if (!files.items || files.items.length === 0) {
-				console.warn('No folders found.');
+				console.warn('No files or folders found.');
 
 				return;
 			}
@@ -80,7 +87,7 @@ function runSharedFileFinder() {
 						id: file.id,
 						isFolder: isFolder,
 						iconLink: file.iconLink,
-						path: getFilePath(folderCache, file),
+						path: getFilePath(folderCache, folderPathCache, file),
 						users: getUserList(file.id),
 						link: file.alternateLink,
 					});
@@ -111,7 +118,9 @@ function runSharedFileFinder() {
  * Returns a list of users with access to a file.
  */
 function getUserList(fileId) {
-	let permissionsList = Drive.Permissions.list(fileId);
+	let permissionsList = Drive.Permissions.list(fileId, {
+		fields: 'items(emailAddress, role)'
+	});
 
 	if (!permissionsList.items || permissionsList.items.length === 0) {
 		console.warn(`No permissions found for file ${fileId}`);
@@ -126,7 +135,7 @@ function getUserList(fileId) {
 
 		if (role === 'reader' || role === 'writer' || role === 'commenter') {
 			userList.push({
-				emailAddress: emailAddress,
+				emailAddress: emailAddress ? emailAddress : 'Anyone with the link',
 				role: role
 			});
 		}
@@ -139,19 +148,40 @@ function getUserList(fileId) {
 /*
  * Returns the full path of a file as a string.
  */
-function getFilePath(folderCache, file) {
-	const folderNameList = [file.title];
+function getFilePath(folderCache, folderPathCache, file) {
+	const parentFoldersList = [{
+		id: file.id,
+		title: file.title
+	}];
 	let parentId = getParentId(file);
+	const parentPath = folderPathCache.get(parentId);
 
-	while (parentId) {
-		const parentFolder = folderCache.get(parentId, () => Drive.Files.get(parentId));
-
-		parentId = getParentId(parentFolder);
-
-		folderNameList.push(parentFolder.title);
+	if (parentPath) {
+		return `${parentPath}/${file.title}}`;
 	}
 
-	return `/${folderNameList.reverse().join('/')}`;
+	while (parentId) {
+		const parentFolder = folderCache.get(parentId, () => Drive.Files.get(parentId, {
+			fields: 'parents(isRoot, id), title'
+		}));
+
+		parentFoldersList.push({
+			id: parentId,
+			title: parentFolder.title
+		});
+
+		parentId = getParentId(parentFolder);
+	}
+
+	let currentFolderPath = '';
+
+	for (let i = parentFoldersList.length - 1; i >= 0; --i) {
+		currentFolderPath += `/${parentFoldersList[i].title}`;
+
+		folderPathCache.set(parentFoldersList[i].id, currentFolderPath);
+	}
+
+	return `${currentFolderPath}/${file.title}`;
 }
 
 
