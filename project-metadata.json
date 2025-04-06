@@ -1,0 +1,16 @@
+{
+  "$schema": "https://johng.io/schema/project-metadata.json",
+  "name": "Shared File Finder for Google Drive",
+  "background": "A Google Apps Script that finds all files/folders on Google Drive that are shared with others and adds them to a spreadsheet. The script addresses the absence of a built-in feature for managing shared files on Google Drive.",
+	"logoPath": "screenshot.png",
+	"category": "Script",
+	"subcategory": "Google Apps",
+  "technologies": [
+    "Apps Script"
+  ],
+  "schema": {
+    "type": "Software",
+    "applicationCategory": "Utilities",
+    "operatingSystem": "Any"
+  }
+}
