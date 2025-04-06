@@ -13,7 +13,7 @@
     </a>
   </p>
 
-  <p class="projectDesc" data-exposition="A Google Apps Script that finds all files/folders on Google Drive that are shared with others and adds them to a spreadsheet. The script addresses the absence of a built-in feature for managing shared files on Google Drive.">
+  <p class="projectDesc">
     An Apps Script that finds all files/folders on Google Drive that are shared with others and adds them to a Google Sheet.
   </p>
 
