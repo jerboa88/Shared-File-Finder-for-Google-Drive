@@ -5,7 +5,7 @@
   <h1 class="projectName">Shared File Finder for Google Drive</h1>
 
   <p class="projectBadges">
-    <img src="https://img.shields.io/badge/type-JS_Script-4caf50.svg" alt="Project type" title="Project type">
+    <img src="https://johng.io/badges/category/Script.svg" alt="Project category" title="Project category">
     <img src="https://img.shields.io/github/languages/top/jerboa88/Shared-File-Finder-for-Google-Drive.svg" alt="Language" title="Language">
     <img src="https://img.shields.io/github/repo-size/jerboa88/Shared-File-Finder-for-Google-Drive.svg" alt="Repository size" title="Repository size">
     <a href="LICENSE">
