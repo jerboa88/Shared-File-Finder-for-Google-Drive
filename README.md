@@ -1,7 +1,5 @@
 <!-- Project Header -->
 <div align="center">
-  <img class="projectLogo" src="screenshot.png" alt="Project logo" title="Project logo" width="256">
-
   <h1 class="projectName">Shared File Finder for Google Drive</h1>
 
   <p class="projectBadges">
@@ -24,6 +22,10 @@
 ## 👋 About
 An [Apps Script](https://developers.google.com/apps-script) that finds all files/folders on [Google Drive](https://drive.google.com) that are shared with others and adds them to a Google Sheet.
 
+### Screenshots
+| ![Screenshot of output spreadsheet](screenshot.png) |
+| --------------------------------------------------- |
+| _Screenshot of output spreadsheet_                  |
 
 ## 🕹️ Usage
  1. Create a [new Google Sheet](https://docs.google.com/spreadsheets/create)
