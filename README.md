@@ -21,7 +21,7 @@
 </div>
 
 
-## Usage
+## 🕹️ Usage
  1. Create a new Google Sheet.
  2. Open the Script Editor (Extensions > Apps Script).
  3. Copy and paste the code from [shared-file-finder.js](shared-file-finder.js) into the Script Editor.
@@ -34,11 +34,11 @@
   - There may be bugs. Use at your own risk.
 
 
-## Contributing
+## 🤝 Contributing
 Contributions, issues, and forks are welcome. [SemVer](http://semver.org/) is used for versioning.
 
 
-## License
+## 🧾 License
 Inspired by a similar script by @danjargold (https://gist.github.com/danjargold/c6542e68fe3a3b46eeb0172f914641bc) and @woodwardtw (https://gist.github.com/woodwardtw/22a199ecca73ff15a0eb). This version uses the Drive API v2 to get info for multiple files at once (which makes it substantially faster).
 
 This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
